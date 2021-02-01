@@ -12,6 +12,5 @@
       "*": ["node_modules/", "app/types/*"]
     }
   },
-  "include": ["app/**/*"],
-  "exclude": ["dist"]
+  "include": ["app/**/*"]
 }
