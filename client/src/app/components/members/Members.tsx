@@ -22,7 +22,7 @@ const Members = () => {
     <section className="section section--members">
       <h1 className="section__title section__title--members">
         Members
-        <hr className="title__underline" />
+        <hr className="title__underline title__underline--members" />
       </h1>
 
       <MemberList members={members} />
