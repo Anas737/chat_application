@@ -22,6 +22,9 @@ const Room = () => {
   return (
     <section className="section section--room">
       <MessageList messages={messages} />
+
+      <hr className="separator" />
+
       <MessageField />
     </section>
   );
