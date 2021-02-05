@@ -6,24 +6,20 @@ const Members = () => {
   const members: Member[] = [
     {
       id: "1",
-      username: "test1",
+      username: "member1",
     },
     {
       id: "2",
-      username: "test2",
+      username: "member2",
     },
     {
       id: "3",
-      username: "test3",
-    },
-    {
-      id: "4",
-      username: "test4",
+      username: "member3",
     },
   ];
 
   return (
-    <section className="section members">
+    <section className="section section--members">
       <h1 className="section__title section__title--members">
         Members
         <hr className="title__underline" />

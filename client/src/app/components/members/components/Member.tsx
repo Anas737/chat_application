@@ -8,7 +8,7 @@ interface MemberProps {
 const Member: React.FC<MemberProps> = ({ member }) => {
   const { username } = member;
 
-  return <li className="member">{member.username}</li>;
+  return <li className="list-item list-item--members">{username}</li>;
 };
 
 export default Member;

@@ -8,7 +8,7 @@ interface MemberListProps {
 
 const MemberList: React.FC<MemberListProps> = ({ members }) => {
   return (
-    <ul className="members__list">
+    <ul className="list list--members">
       {members.map((member: MemberType) => (
         <Member key={member.id} member={member} />
       ))}
