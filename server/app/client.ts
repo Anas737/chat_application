@@ -1,4 +1,6 @@
 import { Socket, Server } from "socket.io";
+import { v4 as uuid } from "uuid";
+
 // types
 import User from "./types/User";
 // database
@@ -20,37 +22,34 @@ const onConnect = (
   // try to add the user to the database
   const { error, user } = users.addUser(userData);
 
-  if (error) return { error };
+  if (error) {
+    client.emit("error", error);
 
-  // make the user join the room
-  return onJoin(server, client);
+    return;
+  }
+
+  // send existing rooms to user
+  client.emit("rooms::all", rooms.getAll().rooms);
+
+  // make the user join the default room
+  onJoin(server, client, roomId);
 };
 
-const onJoin = (server: Server, client: Socket) => {
+const onJoin = (server: Server, client: Socket, roomId: string) => {
   const { user } = users.getUserById(client.id);
-  const { username, roomId } = user;
+  const { username } = user;
 
   // join the room
   client.join(roomId);
 
   // find the room
   const { error, room } = rooms.getRoomById(roomId);
-  if (!room) return { error };
 
-  // send & broadcast welcome message
-  client.emit("room::message", {
-    author: {
-      username: room.name,
-    },
-    content: `Welcome ${username}`,
-  });
+  if (error) {
+    client.emit("error", error);
 
-  client.to(room.id).emit("room::message", {
-    author: {
-      username: room.name,
-    },
-    content: `${username} has joined !`,
-  });
+    return;
+  }
 
   // send room users & messages
   const roomUsers = users.getRoomUsers(roomId).users;
@@ -60,6 +59,27 @@ const onJoin = (server: Server, client: Socket) => {
     name: room.name,
     users: roomUsers,
     messages: room.messages,
+  });
+};
+
+const onJoined = (server: Server, client: Socket) => {
+  const { user } = users.getUserById(client.id);
+  const { username, roomId } = user;
+
+  // find the room
+  const { room } = rooms.getRoomById(roomId);
+
+  // send & broadcast welcome message
+  client.emit("room::message", {
+    id: uuid(),
+    author: room.name,
+    content: `Welcome ${username}`,
+  });
+
+  client.broadcast.to(room.id).emit("room::message", {
+    id: uuid(),
+    author: room.name,
+    content: `${username} has joined !`,
   });
 };
 
@@ -74,13 +94,12 @@ const onSendMessage = (server: Server, client: Socket, content: string) => {
   // add the new message to the room
   const addMessageResult = rooms.addMessage(user, content);
 
-  if (addMessageResult) return { error: addMessageResult.error };
+  if (addMessageResult.error) return { error: addMessageResult.error };
+
+  const message = addMessageResult.message;
 
   // broadcast the message to the room's users
-  server.to(roomId).emit("room::message", {
-    author: user,
-    content,
-  });
+  server.to(roomId).emit("room::message", message);
 };
 
 const onLeave = (server: Server, client: Socket) => {
@@ -100,9 +119,8 @@ const onLeave = (server: Server, client: Socket) => {
   });
 
   server.to(room.id).emit("room::message", {
-    author: {
-      username: room.name,
-    },
+    id: uuid(),
+    author: room.name,
     content: `${username} has left the room`,
   });
 };
@@ -117,6 +135,7 @@ const onDisconnect = (server: Server, client: Socket) => {
 export default {
   onConnect,
   onJoin,
+  onJoined,
   onSendMessage,
   onLeave,
   onDisconnect,

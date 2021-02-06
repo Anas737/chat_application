@@ -7,6 +7,10 @@ interface RoomListProps {
 }
 
 const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
+  console.log("rooms ", rooms);
+
+  if (!rooms) return <ul></ul>;
+
   return (
     <ul className="list list--rooms">
       {rooms.map((room: RoomType) => (

@@ -7,6 +7,8 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+  if (!messages) return <ul></ul>;
+
   return (
     <ul className="list list--messages">
       {messages.map((message) => (

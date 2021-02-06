@@ -1,0 +1,38 @@
+import { io } from "socket.io-client";
+
+export default class Socket {
+  private readonly SERVER_URL = "http://localhost:5000";
+  private client = io(this.SERVER_URL);
+
+  constructor(private username: string) {
+    this.connect();
+  }
+
+  connect() {
+    this.client.emit("user::connect", this.username);
+  }
+
+  join(roomId: string) {
+    this.client.emit("user::join", roomId);
+  }
+
+  joined() {
+    this.client.emit("user::joined");
+  }
+
+  sendMessage(content: string) {
+    this.client.emit("user::sendMessage", content);
+  }
+
+  leaveRoom() {
+    this.client.emit("user::leave");
+  }
+
+  disconnect() {
+    this.client.emit("user::disconnect");
+  }
+
+  on(event: string, handler: any) {
+    this.client.on(event, handler);
+  }
+}

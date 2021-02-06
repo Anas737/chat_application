@@ -1,18 +1,21 @@
 import * as express from "express";
 import * as http from "http";
 import * as socketio from "socket.io";
-import * as cors from "cors";
+const cors = require("cors");
 
 // database
 import users from "./db/users";
 import rooms from "./db/rooms";
 
 import client from "./client";
-import { createInterface } from "readline";
 
 const app = express();
 const server = new http.Server(app);
-const io = new socketio.Server(server);
+const io = new socketio.Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
 
 app.use(cors());
 
@@ -30,12 +33,26 @@ const { room } = rooms.addRoom(DEFAULT_ROOM);
 // listening to server & socket events
 io.on("connect", (socket: socketio.Socket) => {
   // on connect
-  socket.on("user::connect", (username: string) =>
-    client.onConnect(io, socket, username, room.id)
-  );
+  socket.on("user::connect", (username: string) => {
+    // const { user } = users.getUserByUsername(username);
+
+    // if (user) {
+    //   client.onJoin(io, socket, user.roomId);
+    //   return;
+    // }
+
+    console.log("New client connected !");
+
+    client.onConnect(io, socket, username, room.id);
+  });
 
   // on join
-  socket.on("user::join", () => client.onJoin(io, socket));
+  socket.on("user::join", (roomId: string) =>
+    client.onJoin(io, socket, roomId)
+  );
+
+  // on joined
+  socket.on("user::joined", () => client.onJoined(io, socket));
 
   // on send message
   socket.on("user::sendMessage", (content: string) =>

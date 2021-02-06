@@ -7,6 +7,8 @@ interface MemberListProps {
 }
 
 const MemberList: React.FC<MemberListProps> = ({ members }) => {
+  if (!members) return <ul></ul>;
+
   return (
     <ul className="list list--members">
       {members.map((member: MemberType) => (
