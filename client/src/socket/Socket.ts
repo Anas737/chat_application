@@ -32,7 +32,15 @@ export default class Socket {
     this.client.emit("user::disconnect");
   }
 
+  hasListner(event: string) {
+    return this.client.hasListeners(event);
+  }
+
   on(event: string, handler: any) {
     this.client.on(event, handler);
+  }
+
+  off(event: string) {
+    this.client.off(event);
   }
 }

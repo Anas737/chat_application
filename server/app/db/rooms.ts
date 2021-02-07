@@ -54,6 +54,7 @@ const addRoom = (roomName: string) => {
   const newRoom: Room = {
     id,
     name: roomName,
+    members: [],
     messages: [],
   };
 
@@ -72,7 +73,36 @@ const removeRoom = (roomId: string) => {
   return { room };
 };
 
-// message
+// members
+const getAllMembers = (roomId: string) => {
+  // check if the room exists
+  const room = findRoomById(roomId);
+  if (!room) return { members: [] };
+
+  return { members: room.members };
+};
+
+const addMember = (roomId: string, member: User) => {
+  // check if the room exists
+  const room = findRoomById(roomId);
+  if (!room) return { error: `Room with the id ${roomId} does not exist` };
+
+  room.members.push(member);
+
+  return { room };
+};
+
+const removeMember = (roomId: string, memberId: string) => {
+  // check if the room exists
+  const room = findRoomById(roomId);
+  if (!room) return { error: `Room with the id ${roomId} does not exist` };
+
+  room.members = room.members.filter((_member) => _member.id !== memberId);
+
+  return { room };
+};
+
+// messages
 const findMessageById = (roomId: string, messageId: string) => {
   // check if the room exists
   const room = findRoomById(roomId);
@@ -124,7 +154,7 @@ const addMessage = (user: User, content: string) => {
   if (room.messages.length > MESSAGES_LIMIT)
     room.messages = room.messages.slice(1);
 
-  return { message };
+  return { room };
 };
 
 const removeMessage = (user: User, message: Message) => {
@@ -143,7 +173,7 @@ const removeMessage = (user: User, message: Message) => {
     (_message: Message) => _message.id !== messageId
   );
 
-  return { message };
+  return { room };
 };
 
 export default {
@@ -152,6 +182,11 @@ export default {
   getAll,
   addRoom,
   removeRoom,
+
+  getAllMembers,
+  addMember,
+  removeMember,
+
   getMessageById,
   getAllMessages,
   addMessage,

@@ -41,6 +41,7 @@ const onJoin = (server: Server, client: Socket, roomId: string) => {
 
   // join the room
   client.join(roomId);
+  rooms.addMember(roomId, user);
 
   // find the room
   const { error, room } = rooms.getRoomById(roomId);
@@ -51,15 +52,7 @@ const onJoin = (server: Server, client: Socket, roomId: string) => {
     return;
   }
 
-  // send room users & messages
-  const roomUsers = users.getRoomUsers(roomId).users;
-
-  client.emit("room::data", {
-    id: room.id,
-    name: room.name,
-    users: roomUsers,
-    messages: room.messages,
-  });
+  client.emit("room::data", room);
 };
 
 const onJoined = (server: Server, client: Socket) => {
@@ -69,18 +62,8 @@ const onJoined = (server: Server, client: Socket) => {
   // find the room
   const { room } = rooms.getRoomById(roomId);
 
-  // send & broadcast welcome message
-  client.emit("room::message", {
-    id: uuid(),
-    author: room.name,
-    content: `Welcome ${username}`,
-  });
-
-  client.broadcast.to(room.id).emit("room::message", {
-    id: uuid(),
-    author: room.name,
-    content: `${username} has joined !`,
-  });
+  // broadcast updated room
+  client.broadcast.to(roomId).emit("room::update", room);
 };
 
 const onSendMessage = (server: Server, client: Socket, content: string) => {
@@ -96,10 +79,9 @@ const onSendMessage = (server: Server, client: Socket, content: string) => {
 
   if (addMessageResult.error) return { error: addMessageResult.error };
 
-  const message = addMessageResult.message;
-
-  // broadcast the message to the room's users
-  server.to(roomId).emit("room::message", message);
+  // broadcast updated room
+  const updatedRoom = addMessageResult.room;
+  server.to(roomId).emit("room::update", updatedRoom);
 };
 
 const onLeave = (server: Server, client: Socket) => {
@@ -108,21 +90,25 @@ const onLeave = (server: Server, client: Socket) => {
 
   // find the room
   const { room, error } = rooms.getRoomById(roomId);
-  if (!room) return { error };
+  if (error) {
+    client.emit("error", error);
+
+    return;
+  }
 
   // leave the room
   client.leave(room.id);
+  const removeMemberResult = rooms.removeMember(room.id, user.id);
 
-  // broadcast user leave
-  server.to(room.id).emit("room::leave", {
-    user,
-  });
+  if (removeMemberResult.error) {
+    client.emit("error", removeMemberResult.error);
 
-  server.to(room.id).emit("room::message", {
-    id: uuid(),
-    author: room.name,
-    content: `${username} has left the room`,
-  });
+    return;
+  }
+
+  // broadcast updated room
+  const updatedRoom = removeMemberResult.room;
+  server.to(room.id).emit("room::update", updatedRoom);
 };
 
 const onDisconnect = (server: Server, client: Socket) => {

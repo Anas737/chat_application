@@ -4,17 +4,16 @@ import Room from "./Room";
 
 interface RoomListProps {
   rooms: RoomType[];
+  joinRoom: (roomId: string) => void;
 }
 
-const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
-  console.log("rooms ", rooms);
-
+const RoomList: React.FC<RoomListProps> = ({ rooms, joinRoom }) => {
   if (!rooms) return <ul></ul>;
 
   return (
     <ul className="list list--rooms">
       {rooms.map((room: RoomType) => (
-        <Room key={room.id} room={room} />
+        <Room key={room.id} room={room} joinRoom={joinRoom} />
       ))}
     </ul>
   );

@@ -13,6 +13,19 @@ import Room from "./components/room";
 
 let client: Socket;
 
+const sendMessage = (message: string) => {
+  if (!message.trim()) return;
+
+  client.sendMessage(message);
+};
+
+const joinRoom = (roomId: string) => {
+  client.leaveRoom();
+  client.join(roomId);
+};
+
+const disconnect = () => client.disconnect();
+
 const App = () => {
   const [isRoomsShown, setRoomsShown] = React.useState(false);
   const [isMembersShown, setMembersShown] = React.useState(false);
@@ -22,7 +35,14 @@ const App = () => {
   const [isRoomChanged, setRoomChanged] = React.useState(false);
 
   React.useEffect(() => {
-    client = new Socket(`Anas ${Math.random() * 100}`);
+    if (!isRoomChanged) return;
+
+    client.joined();
+    setRoomChanged(false);
+  }, [isRoomChanged]);
+
+  React.useEffect(() => {
+    client = new Socket(`User ${Math.random() * 100}`);
 
     client.on("error", (error: any) => alert(error));
     client.on("rooms::all", (rooms: RoomType[]) => setRooms(rooms));
@@ -30,24 +50,17 @@ const App = () => {
       setCurrentRoom(room);
       setRoomChanged(true);
     });
-  }, []);
-
-  React.useEffect(() => {
-    if (!isRoomChanged) return;
-
-    client.on("room::message", (message: MessageType) => {
-      const updatedRoom = { ...currentRoom };
-
-      if (!updatedRoom.messages) return;
-
-      updatedRoom.messages = [...updatedRoom.messages, message];
-
+    client.on("room::update", (updatedRoom: RoomType) => {
       setCurrentRoom(updatedRoom);
     });
 
-    client.joined();
-    setRoomChanged(false);
-  }, [isRoomChanged, currentRoom]);
+    return () => {
+      client.off("error");
+      client.off("rooms::all");
+      client.off("room::data");
+      client.off("room::update");
+    };
+  }, []);
 
   // mobile
   let showClass = "";
@@ -73,11 +86,11 @@ const App = () => {
         toggleIsMembersShown={toggleIsMembersShown}
       />
       {/* rooms */}
-      <Rooms rooms={rooms} />
+      <Rooms rooms={rooms} joinRoom={joinRoom} />
       {/* room's members */}
-      <Members members={currentRoom.users} />
+      <Members members={currentRoom.members} />
       {/* room's discussion */}
-      <Room messages={currentRoom.messages} />
+      <Room messages={currentRoom.messages} sendMessage={sendMessage} />
     </div>
   );
 };

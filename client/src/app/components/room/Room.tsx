@@ -5,13 +5,14 @@ import MessageField from "./components/MessageField";
 
 interface RoomProps {
   messages: MessageType[];
+  sendMessage: (message: string) => void;
 }
 
-const Room: React.FC<RoomProps> = ({ messages }) => {
+const Room: React.FC<RoomProps> = ({ messages, sendMessage }) => {
   return (
     <section className="section section--room">
       <MessageList messages={messages} />
-      <MessageField />
+      <MessageField sendMessage={sendMessage} />
     </section>
   );
 };

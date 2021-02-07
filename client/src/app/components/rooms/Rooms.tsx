@@ -5,9 +5,10 @@ import SearchField from "./components/SearchField";
 
 interface RoomsProps {
   rooms: RoomType[];
+  joinRoom: (roomId: string) => void;
 }
 
-const Rooms: React.FC<RoomsProps> = ({ rooms }) => {
+const Rooms: React.FC<RoomsProps> = ({ rooms, joinRoom }) => {
   return (
     <section className="section section--rooms">
       <header className="section__header section__header--rooms">
@@ -18,7 +19,7 @@ const Rooms: React.FC<RoomsProps> = ({ rooms }) => {
       </header>
 
       <SearchField />
-      <RoomList rooms={rooms} />
+      <RoomList rooms={rooms} joinRoom={joinRoom} />
     </section>
   );
 };
