@@ -40,7 +40,7 @@ const getAll = () => {
   return { rooms };
 };
 
-const addRoom = (roomName: string) => {
+const createRoom = (roomName: string) => {
   roomName = roomName.trim();
 
   // check if the room name already used
@@ -145,6 +145,7 @@ const addMessage = (user: User, content: string) => {
   const message: Message = {
     id,
     authorId: user.id,
+    author: user.username,
     content,
   };
 
@@ -180,7 +181,7 @@ export default {
   getRoomById,
   getRoomByName,
   getAll,
-  addRoom,
+  createRoom,
   removeRoom,
 
   getAllMembers,

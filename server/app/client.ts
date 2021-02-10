@@ -16,7 +16,6 @@ const onConnect = (
   const userData: User = {
     id: client.id,
     username,
-    roomId,
   };
 
   // try to add the user to the database
@@ -35,16 +34,31 @@ const onConnect = (
   onJoin(server, client, roomId);
 };
 
+const onCreateRoom = (server: Server, client: Socket, roomName: string) => {
+  const { room, error } = rooms.createRoom(roomName);
+
+  if (error) {
+    client.emit("error", error);
+    return;
+  }
+
+  // send existing rooms to user
+  client.emit("rooms::all", rooms.getAll().rooms);
+};
+
 const onJoin = (server: Server, client: Socket, roomId: string) => {
   const { user } = users.getUserById(client.id);
   const { username } = user;
 
+  if (user.roomId === roomId) return;
+
   // join the room
   client.join(roomId);
   rooms.addMember(roomId, user);
+  users.updateUser(user.id, { ...user, roomId });
 
   // find the room
-  const { error, room } = rooms.getRoomById(roomId);
+  const { room, error } = rooms.getRoomById(roomId);
 
   if (error) {
     client.emit("error", error);
@@ -84,9 +98,11 @@ const onSendMessage = (server: Server, client: Socket, content: string) => {
   server.to(roomId).emit("room::update", updatedRoom);
 };
 
-const onLeave = (server: Server, client: Socket) => {
+const onLeave = (server: Server, client: Socket, nextRoomId: string) => {
   const { user } = users.getUserById(client.id);
   const { username, roomId } = user;
+
+  if (nextRoomId !== "" && nextRoomId === roomId) return;
 
   // find the room
   const { room, error } = rooms.getRoomById(roomId);
@@ -99,6 +115,7 @@ const onLeave = (server: Server, client: Socket) => {
   // leave the room
   client.leave(room.id);
   const removeMemberResult = rooms.removeMember(room.id, user.id);
+  users.updateUser(user.id, { ...user, roomId: null });
 
   if (removeMemberResult.error) {
     client.emit("error", removeMemberResult.error);
@@ -112,7 +129,7 @@ const onLeave = (server: Server, client: Socket) => {
 };
 
 const onDisconnect = (server: Server, client: Socket) => {
-  onLeave(server, client);
+  onLeave(server, client, "");
 
   // remove user from database
   users.removeUser(client.id);
@@ -120,6 +137,7 @@ const onDisconnect = (server: Server, client: Socket) => {
 
 export default {
   onConnect,
+  onCreateRoom,
   onJoin,
   onJoined,
   onSendMessage,

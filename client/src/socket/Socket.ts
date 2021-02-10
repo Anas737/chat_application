@@ -12,6 +12,10 @@ export default class Socket {
     this.client.emit("user::connect", this.username);
   }
 
+  createRoom(roomName: string) {
+    this.client.emit("room::create", roomName);
+  }
+
   join(roomId: string) {
     this.client.emit("user::join", roomId);
   }
@@ -24,8 +28,8 @@ export default class Socket {
     this.client.emit("user::sendMessage", content);
   }
 
-  leaveRoom() {
-    this.client.emit("user::leave");
+  leaveRoom(nextRoomId: string) {
+    this.client.emit("user::leave", nextRoomId);
   }
 
   disconnect() {

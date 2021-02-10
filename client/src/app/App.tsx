@@ -10,8 +10,16 @@ import MobileBar from "./components/MobileBar";
 import Members from "./components/members";
 import Rooms from "./components/rooms";
 import Room from "./components/room";
+import CreateRoom from "./components/forms/CreateRoom";
 
 let client: Socket;
+
+const createRoom = (roomName: string) => client.createRoom(roomName);
+
+const joinRoom = (roomId: string) => {
+  client.leaveRoom(roomId);
+  client.join(roomId);
+};
 
 const sendMessage = (message: string) => {
   if (!message.trim()) return;
@@ -19,16 +27,12 @@ const sendMessage = (message: string) => {
   client.sendMessage(message);
 };
 
-const joinRoom = (roomId: string) => {
-  client.leaveRoom();
-  client.join(roomId);
-};
-
 const disconnect = () => client.disconnect();
 
 const App = () => {
   const [isRoomsShown, setRoomsShown] = React.useState(false);
   const [isMembersShown, setMembersShown] = React.useState(false);
+  const [isCreateRoomDisplayed, setCreateRoomDisplayed] = React.useState(false);
 
   const [rooms, setRooms] = React.useState([] as RoomType[]);
   const [currentRoom, setCurrentRoom] = React.useState({} as RoomType);
@@ -78,6 +82,15 @@ const App = () => {
     setRoomsShown(false);
   }, [isMembersShown]);
 
+  // create room
+  const openCreateRoom = React.useCallback(() => {
+    setCreateRoomDisplayed(true);
+  }, []);
+
+  const closeCreateRoom = React.useCallback(() => {
+    setCreateRoomDisplayed(false);
+  }, []);
+
   return (
     <div className={`app ${showClass}`.trim()}>
       {/* mobile */}
@@ -86,11 +99,20 @@ const App = () => {
         toggleIsMembersShown={toggleIsMembersShown}
       />
       {/* rooms */}
-      <Rooms rooms={rooms} joinRoom={joinRoom} />
+      <Rooms
+        rooms={rooms}
+        joinRoom={joinRoom}
+        openCreateRoom={openCreateRoom}
+        currentRoomId={currentRoom.id}
+      />
       {/* room's members */}
-      <Members members={currentRoom.members} />
+      <Members roomName={currentRoom.name} members={currentRoom.members} />
       {/* room's discussion */}
       <Room messages={currentRoom.messages} sendMessage={sendMessage} />
+      {/* create room form */}
+      {isCreateRoomDisplayed && (
+        <CreateRoom createRoom={createRoom} closeCreateRoom={closeCreateRoom} />
+      )}
     </div>
   );
 };

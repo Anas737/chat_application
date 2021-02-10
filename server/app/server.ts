@@ -28,7 +28,7 @@ app.get("/", (req: any, res: any) => {
 
 // create default room
 const DEFAULT_ROOM = "HOME";
-const { room } = rooms.addRoom(DEFAULT_ROOM);
+const { room } = rooms.createRoom(DEFAULT_ROOM);
 
 // listening to server & socket events
 io.on("connect", (socket: socketio.Socket) => {
@@ -45,6 +45,11 @@ io.on("connect", (socket: socketio.Socket) => {
 
     client.onConnect(io, socket, username, room.id);
   });
+
+  // on create room
+  socket.on("room::create", (roomName: string) =>
+    client.onCreateRoom(io, socket, roomName)
+  );
 
   // on join
   socket.on("user::join", (roomId: string) =>

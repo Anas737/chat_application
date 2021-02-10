@@ -57,6 +57,14 @@ const addUser = (user: User) => {
   return { user };
 };
 
+const updateUser = (id: string, updatedUser: User) => {
+  const userIndex = users.findIndex((_user) => _user.id === id);
+
+  users[userIndex] = updatedUser;
+
+  return { updateUser };
+};
+
 const removeUser = (id: string) => {
   const user = findUserById(id);
 
@@ -71,5 +79,6 @@ export default {
   getRoomUsers,
   getAll,
   addUser,
+  updateUser,
   removeUser,
 };
